@@ -3,3 +3,4 @@ anytree
 pandas
 scikit-learn
 matplotlib
+scipy
