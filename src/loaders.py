@@ -28,3 +28,13 @@ def shuffle_and_split_data(
     val_ids = permuted[:n_val].tolist()
     train_ids = permuted[n_val:].tolist()
     return train_ids, val_ids
+
+def load_gather(sample_id):
+    SRC_IDS = [1, 75, 150, 225, 300]
+    DATA_DIR = '../data/raw/train_data'
+    mats = []
+    for sid in SRC_IDS:
+        path = os.path.join(DATA_DIR, sample_id, f'receiver_data_src_{sid}.npy')
+        mats.append(np.load(path))
+    return np.stack(mats, axis=0)  # (5, time, receivers)
+

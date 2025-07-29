@@ -4,3 +4,5 @@ pandas
 scikit-learn
 matplotlib
 scipy
+umap-learn
+hdbscan
