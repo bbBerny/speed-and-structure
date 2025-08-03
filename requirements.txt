@@ -2,6 +2,7 @@ numpy
 anytree
 pandas
 scikit-learn
+scikit-image
 matplotlib
 scipy
 umap-learn
