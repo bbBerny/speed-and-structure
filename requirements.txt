@@ -8,3 +8,6 @@ umap-learn
 hdbscan
 tensorflow
 seaborn
+keras-tuner
+tensorboard_plugin_profile
+tensorboard
