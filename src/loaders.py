@@ -5,13 +5,13 @@ import numpy as np
 
 def get_training_ids() -> tuple[list, list]:
     """Return sorted list of folder names under data_dir."""
-    TRAIN_GLOB = '../data/raw/train_data/*'
+    TRAIN_GLOB = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'raw', 'train_data', '*')
     train_paths = sorted(glob(TRAIN_GLOB))
     train_ids = [os.path.basename(p) for p in train_paths]
     return train_paths, train_ids
 
 def get_test_ids() -> tuple[list, list]:
-    TEST_GLOB = '../data/raw/test_data/*'
+    TEST_GLOB = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'raw', 'test_data', '*')
     test_paths = sorted(glob(TEST_GLOB))
     test_ids = [os.path.basename(p) for p in test_paths]
     return test_paths, test_ids
@@ -31,7 +31,7 @@ def shuffle_and_split_data(
 
 def load_gather(sample_id):
     SRC_IDS = [1, 75, 150, 225, 300]
-    DATA_DIR = '../data/raw/train_data'
+    DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'raw', 'train_data')
     mats = []
     for sid in SRC_IDS:
         path = os.path.join(DATA_DIR, sample_id, f'receiver_data_src_{sid}.npy')
@@ -80,13 +80,18 @@ def load_data_array(sample_ids: list, receiver_ids: list = [1, 75, 150, 225, 300
 
     result = np.zeros((num_samples, num_receivers, receiver_shape[0], receiver_shape[1]), dtype=np.float32)
     result2 = np.zeros((num_samples, model_shape[0], model_shape[1]))
+    
+    DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'raw', 'train_data')
 
     for i, sample_id in enumerate(sample_ids):
+        # Load the VP model once per sample
+        arr2 = np.load(os.path.join(DATA_DIR, sample_id, 'vp_model.npy'))
+        result2[i, :, :] = arr2
+        
         for j, receiver_id in enumerate(receiver_ids):
-            arr = np.load(f'../data/raw/train_data/{sample_id}/receiver_data_src_{receiver_id}.npy')
-            arr2 = np.load(f'../data/raw/train_data/{sample_id}/vp_model.npy')
+            arr = np.load(os.path.join(DATA_DIR, sample_id, f'receiver_data_src_{receiver_id}.npy'))
             result[i, j, :, :] = arr
-            result2[i, :, :] = arr2
+            
     return result, result2
 
 def load_data_array_test(sample_ids: list, receiver_ids: list = [1, 75, 150, 225, 300], receiver_shape: tuple = (10001, 31), model_shape: tuple = (300, 1259)):
@@ -130,12 +135,12 @@ def load_data_array_test(sample_ids: list, receiver_ids: list = [1, 75, 150, 225
     num_receivers = len(receiver_ids)
 
     result = np.zeros((num_samples, num_receivers, receiver_shape[0], receiver_shape[1]), dtype=np.float32)
-    result2 = np.zeros((num_samples, model_shape[0], model_shape[1]))
+    
+    TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'raw', 'test_data')
 
     for i, sample_id in enumerate(sample_ids):
         for j, receiver_id in enumerate(receiver_ids):
-            arr = np.load(f'../data/raw/test_data/{sample_id}/receiver_data_src_{receiver_id}.npy')
-            
+            arr = np.load(os.path.join(TEST_DATA_DIR, sample_id, f'receiver_data_src_{receiver_id}.npy'))
             result[i, j, :, :] = arr
             
     return result

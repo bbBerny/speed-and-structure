@@ -10,21 +10,25 @@ import tensorflow as tf
 from tensorflow import keras
 
 # Add repo root to path
-repo_root = os.path.abspath(os.path.join(os.getcwd(), '..'))
+repo_root = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 if repo_root not in sys.path:
     sys.path.insert(0, repo_root)
 
 from src.loaders import load_data_array_test
 
 # Contest submission function
-def create_submission(sample_id: str, prediction: np.ndarray, submission_path: str):
-    """Function to create submission file out of one test prediction at time"""
+def save_submission_batch(predictions_dict: dict, submission_path: str):
+    """Function to create submission file out of a batch of predictions"""
     try:
-        submission = dict(np.load(submission_path))
-    except:
+        if os.path.exists(submission_path):
+            submission = dict(np.load(submission_path))
+        else:
+            submission = dict({})
+    except Exception as e:
+        print(f"Warning: could not load existing submission: {e}. Starting fresh.")
         submission = dict({})
     
-    submission.update(dict({sample_id: prediction}))
+    submission.update(predictions_dict)
     np.savez(submission_path, **submission)
     return
 
@@ -46,7 +50,8 @@ def load_test_data():
     print("Loading test data...")
     
     # Load test features
-    test_features = pd.read_csv('../data/processed/test_features.csv')
+    test_features_path = os.path.join(repo_root, 'data', 'processed', 'test_features.csv')
+    test_features = pd.read_csv(test_features_path)
     test_ids = test_features['sample_id'].values
     
     print("Test features columns:", test_features.columns.tolist())
@@ -123,6 +128,9 @@ def make_predictions_and_save(model, X_wide_test, X_deep_test, test_ids,
             verbose=0
         )
         
+        # Create a dictionary for this batch's predictions
+        batch_predictions_dict = {}
+        
         # Save each prediction using contest format
         for j, sample_id in enumerate(batch_ids):
             prediction = batch_predictions[j]  # Shape: (300, 1259)
@@ -131,11 +139,11 @@ def make_predictions_and_save(model, X_wide_test, X_deep_test, test_ids,
             assert prediction.shape == (300, 1259), f"Expected (300, 1259), got {prediction.shape}"
             
             # Convert to float64 as required by contest
-            prediction = prediction.astype(np.float64)
+            batch_predictions_dict[sample_id] = prediction.astype(np.float64)
             
-            # Save to contest submission file
-            create_submission(sample_id, prediction, submission_path)
-            
+        # Save batch to contest submission file all at once
+        save_submission_batch(batch_predictions_dict, submission_path)
+        
         print(f"Processed batch {i//batch_size + 1}/{(num_samples-1)//batch_size + 1}")
     
     print(f"✅ All predictions saved to {submission_path}")
@@ -170,13 +178,14 @@ def main():
     print("=" * 60)
     
     # 1. Load trained model
-    model = load_trained_model('../models/model_02_mlp.keras')
+    model_path = os.path.join(repo_root, 'models', 'model_02_mlp.keras')
+    model = load_trained_model(model_path)
     
     # 2. Load test data
     X_wide_test, X_deep_test, test_ids = load_test_data()
     
     # 3. Make predictions and save in contest format
-    submission_path = '../submissions/model_02_mlp_submission.npz'
+    submission_path = os.path.join(repo_root, 'submissions', 'model_02_mlp_submission.npz')
     make_predictions_and_save(
         model, X_wide_test, X_deep_test, test_ids, 
         submission_path, batch_size=8

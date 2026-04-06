@@ -23,12 +23,11 @@ def dummy_prediction(input_data, output_shape):
     return prediction
 
 
-def create_submission(sample_id: str, prediction: np.ndarray, submission_path: str):
-    """Function to create submission file out of one test prediction at time
+def save_submission_batch(predictions_dict: Dict[str, np.ndarray], submission_path: str):
+    """Function to create or update submission file out of a dictionary of predictions.
 
     Parameters:
-        sample_id: filename
-        prediction: 2D np.ndarray of predicted velocity model
+        predictions_dict: Dictionary mapping sample_id (str) to predicted velocity model (2D np.ndarray)
         submission_path: path to save submission
 
     Returns:
@@ -36,11 +35,15 @@ def create_submission(sample_id: str, prediction: np.ndarray, submission_path: s
     """
 
     try:
-        submission = dict(np.load(submission_path))
-    except:
+        if Path(submission_path).exists():
+            submission = dict(np.load(submission_path))
+        else:
+            submission = dict({})
+    except Exception as e:
+        print(f"Warning: could not load existing submission: {e}. Starting fresh.")
         submission = dict({})
 
-    submission.update(dict({sample_id: prediction}))
+    submission.update(predictions_dict)
 
     np.savez(submission_path, **submission)
 

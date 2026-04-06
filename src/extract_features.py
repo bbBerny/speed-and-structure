@@ -52,8 +52,8 @@ except ImportError:
     )
 
 # Configuration
-DATA_DIR = '../data/raw/train_data'
-OUTPUT_PATH = '../data/processed/final_features.csv'
+DATA_DIR = os.path.join(parent_dir, 'data', 'raw', 'train_data')
+OUTPUT_PATH = os.path.join(parent_dir, 'data', 'processed', 'final_features.csv')
 
 def extract_basic_features(sample_ids):
     """Extract basic features from seismic data"""
@@ -153,7 +153,7 @@ def normalize_features(df, train_mask):
     print(f"  Normalized {len(feature_cols)} features")
     
     # Save the scaler for test data preprocessing
-    scaler_path = '../data/processed/scaler.pkl'
+    scaler_path = os.path.join(parent_dir, 'data', 'processed', 'scaler.pkl')
     os.makedirs(os.path.dirname(scaler_path), exist_ok=True)
     joblib.dump(scaler, scaler_path)
     print(f"  Saved scaler to {scaler_path}")
@@ -182,8 +182,8 @@ def compute_embeddings(df):
     df['umap2'] = umap_coords[:, 1]
     
     # Save PCA and UMAP for test data preprocessing
-    pca_path = '../data/processed/pca_reducer.pkl'
-    umap_path = '../data/processed/umap_reducer.pkl'
+    pca_path = os.path.join(parent_dir, 'data', 'processed', 'pca_reducer.pkl')
+    umap_path = os.path.join(parent_dir, 'data', 'processed', 'umap_reducer.pkl')
     joblib.dump(pca, pca_path)
     joblib.dump(umap_reducer, umap_path)
     print(f"  Saved PCA reducer to {pca_path}")
